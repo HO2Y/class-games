@@ -1,7 +1,8 @@
 export const SCORE_KEYS = {
   snake: 'snake_best_score',
   pong: 'pong_best_total',
-  bullet: 'bullet_best_time'
+  bullet: 'bullet_best_time',
+  forge: 'forge_best_level'
 };
 
 export function getHighScore(key, fallback = 0) {

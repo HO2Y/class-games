@@ -1,10 +1,11 @@
-const CACHE_NAME = 'arcade-trio-v3';
+const CACHE_NAME = 'arcade-trio-v4';
 const ASSETS = [
   '/',
   '/index.html',
   '/snake.html',
   '/pong.html',
   '/bullet.html',
+  '/forge.html',
   '/styles.css',
   '/manifest.json',
   '/src/pwa.js',
@@ -14,6 +15,7 @@ const ASSETS = [
   '/src/pong-game.js',
   '/src/pong-logic.js',
   '/src/bullet-game.js',
+  '/src/forge-game.js',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg'
 ];

@@ -22,31 +22,43 @@ const BULLET_TYPES = ['orb', 'flower', 'face', 'kitty', 'plane', 'missile', 'car
 const DIFFICULTY_PRESETS = {
   easy: {
     label: 'Easy',
-    playerSpeed: 280,
-    dangerDivisor: 33,
-    spawnMultiplier: 0.72,
-    speedMultiplier: 0.78
+    playerSpeed: 305,
+    dangerDivisor: 58,
+    maxDanger: 7,
+    spawnMultiplier: 0.36,
+    speedMultiplier: 0.52,
+    giantChanceMultiplier: 0.38,
+    gimmickChance: 0.35
   },
   normal: {
     label: 'Normal',
-    playerSpeed: 265,
-    dangerDivisor: 25,
-    spawnMultiplier: 1,
-    speedMultiplier: 1
+    playerSpeed: 290,
+    dangerDivisor: 38,
+    maxDanger: 13,
+    spawnMultiplier: 0.58,
+    speedMultiplier: 0.7,
+    giantChanceMultiplier: 0.58,
+    gimmickChance: 0.48
   },
   hard: {
     label: 'Hard',
-    playerSpeed: 252,
-    dangerDivisor: 21,
-    spawnMultiplier: 1.32,
-    speedMultiplier: 1.2
+    playerSpeed: 278,
+    dangerDivisor: 30,
+    maxDanger: 20,
+    spawnMultiplier: 0.82,
+    speedMultiplier: 0.9,
+    giantChanceMultiplier: 0.75,
+    gimmickChance: 0.58
   },
   insane: {
     label: 'Insane',
-    playerSpeed: 244,
-    dangerDivisor: 17,
-    spawnMultiplier: 1.65,
-    speedMultiplier: 1.44
+    playerSpeed: 268,
+    dangerDivisor: 24,
+    maxDanger: 28,
+    spawnMultiplier: 1.05,
+    speedMultiplier: 1.08,
+    giantChanceMultiplier: 0.92,
+    gimmickChance: 0.7
   }
 };
 
@@ -54,7 +66,7 @@ const player = {
   x: canvas.width / 2,
   y: canvas.height * 0.8,
   radius: 7,
-  speed: 280
+  speed: 305
 };
 
 let spiralAngle = 0;
@@ -70,7 +82,7 @@ let flashAlpha = 0;
 let presetKey = 'easy';
 let bestTime = getHighScore(SCORE_KEYS.bullet, 0);
 let gimmick = null;
-let gimmickCooldown = rand(10, 16);
+let gimmickCooldown = nextGimmickCooldown();
 let rainAccumulator = 0;
 
 renderFrame(0);
@@ -176,7 +188,7 @@ function resetGame() {
   screenShake = 0;
   flashAlpha = 0;
   gimmick = null;
-  gimmickCooldown = rand(10, 16);
+  gimmickCooldown = nextGimmickCooldown();
   rainAccumulator = 0;
   status = 'running';
   statusEl.textContent = 'Running';
@@ -210,9 +222,9 @@ function spawnBullets(dt) {
   const gimmickSpawnBoost =
     gimmick?.type === 'storm' ? 1.28 : gimmick?.type === 'rain' ? 1.16 : 1;
   const spawnsPerSecond = clamp(
-    (1.2 * danger + 0.28 * Math.pow(danger, 1.45)) * spawnScale * gimmickSpawnBoost,
-    1.2,
-    48
+    (0.85 * danger + 0.17 * Math.pow(danger, 1.35)) * spawnScale * gimmickSpawnBoost,
+    0.7,
+    38
   );
   spawnAccumulator += dt * spawnsPerSecond;
 
@@ -821,8 +833,8 @@ function spawnGrazeParticles(x, y, hue) {
 }
 
 function dangerLevel() {
-  const divisor = DIFFICULTY_PRESETS[presetKey].dangerDivisor;
-  return clamp(Math.exp(elapsed / divisor), 1, 40);
+  const preset = DIFFICULTY_PRESETS[presetKey];
+  return clamp(Math.exp(elapsed / preset.dangerDivisor), 1, preset.maxDanger);
 }
 
 function hueForDanger(danger) {
@@ -839,7 +851,7 @@ function clamp(value, min, max) {
 
 function scaledSpeed(danger, factor) {
   const presetScale = DIFFICULTY_PRESETS[presetKey].speedMultiplier;
-  return clamp((50 + 17 * Math.pow(danger, 1.2)) * factor * presetScale, 70, 820);
+  return clamp((42 + 12 * Math.pow(danger, 1.12)) * factor * presetScale, 54, 620);
 }
 
 function randomBulletKind(danger) {
@@ -884,7 +896,8 @@ function giantScaleFor(danger, type) {
       : type === 'kitty'
         ? 0.018
         : 0.012;
-  const chance = clamp(0.015 + danger * typeBonus, 0.015, 0.16);
+  const presetScale = DIFFICULTY_PRESETS[presetKey].giantChanceMultiplier;
+  const chance = clamp((0.015 + danger * typeBonus) * presetScale, 0.008, 0.2);
   if (Math.random() > chance) {
     return 1;
   }
@@ -978,20 +991,28 @@ function updateGimmick(dt) {
     return;
   }
 
+  const preset = DIFFICULTY_PRESETS[presetKey];
   gimmickCooldown -= dt;
   if (elapsed < 8 || gimmickCooldown > 0) {
     return;
   }
 
+  if (Math.random() > preset.gimmickChance) {
+    gimmickCooldown = nextGimmickCooldown();
+    return;
+  }
+
   const roll = Math.random();
-  if (roll < 0.34) {
+  if (presetKey === 'easy') {
+    gimmick = roll < 0.82 ? { type: 'slowfield', timeLeft: 4.8 } : { type: 'rain', timeLeft: 4.3 };
+  } else if (roll < 0.34) {
     gimmick = { type: 'rain', timeLeft: 5.8 };
   } else if (roll < 0.67) {
     gimmick = { type: 'slowfield', timeLeft: 5.2 };
   } else {
     gimmick = { type: 'storm', timeLeft: 4.6 };
   }
-  gimmickCooldown = rand(12, 18);
+  gimmickCooldown = nextGimmickCooldown();
   screenShake = Math.max(screenShake, 0.35);
   flashAlpha = Math.max(flashAlpha, 0.22);
 }
@@ -1022,4 +1043,17 @@ function normalizeHue(value) {
     h += 360;
   }
   return h;
+}
+
+function nextGimmickCooldown() {
+  if (presetKey === 'easy') {
+    return rand(21, 30);
+  }
+  if (presetKey === 'normal') {
+    return rand(16, 24);
+  }
+  if (presetKey === 'hard') {
+    return rand(12, 19);
+  }
+  return rand(10, 16);
 }

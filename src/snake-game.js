@@ -360,10 +360,7 @@ function onEat(food, previousScore, currentScore) {
     spawnParticles(food.x, food.y, state.cols);
   }
 
-  const gained = state.score - previousScore;
-  if (gained >= 3) {
-    triggerShake(170);
-  }
+  // Keep particle feedback but avoid frequent shake on every food for comfort.
 }
 
 function spawnParticles(x, y, cols) {
