@@ -18,7 +18,7 @@ const keys = new Set();
 const particles = [];
 const bullets = [];
 const shockwaves = [];
-const BULLET_TYPES = ['orb', 'flower', 'face', 'plane', 'missile'];
+const BULLET_TYPES = ['orb', 'flower', 'face', 'plane', 'missile', 'car'];
 const DIFFICULTY_PRESETS = {
   easy: {
     label: 'Easy',
@@ -244,7 +244,7 @@ function spawnRingBurst(danger) {
       centerY,
       Math.cos(a) * speed,
       Math.sin(a) * speed,
-      2.8,
+      rand(2.2, 4.6),
       hueForDanger(danger),
       kind
     );
@@ -266,7 +266,7 @@ function spawnSpiralStream(danger) {
       originY,
       Math.cos(a) * speed,
       Math.sin(a) * speed,
-      3.2,
+      rand(2.6, 5.4),
       hueForDanger(danger + i * 0.2),
       kind
     );
@@ -291,7 +291,7 @@ function spawnWaveFan(danger) {
       y,
       vx,
       vy,
-      2.6,
+      rand(2.1, 4.8),
       hueForDanger(danger + Math.sin(a) * 0.7),
       randomBulletKind(danger)
     );
@@ -326,14 +326,21 @@ function spawnHunterVolley(danger) {
     const d = Math.hypot(dx, dy) || 1;
     const spread = rand(-0.28, 0.28);
     const baseAngle = Math.atan2(dy, dx) + spread;
-    const kind = Math.random() < 0.45 ? 'missile' : Math.random() < 0.5 ? 'plane' : 'face';
+    const kind =
+      Math.random() < 0.35
+        ? 'missile'
+        : Math.random() < 0.55
+          ? 'plane'
+          : Math.random() < 0.75
+            ? 'car'
+            : 'face';
 
     createBullet(
       x,
       y,
       Math.cos(baseAngle) * speed,
       Math.sin(baseAngle) * speed,
-      kind === 'missile' ? 3.5 : 3,
+      kind === 'missile' ? rand(3.5, 6.2) : kind === 'plane' ? rand(3.4, 6.8) : rand(2.8, 5.5),
       hueForDanger(danger + i * 0.1),
       kind
     );
@@ -341,19 +348,30 @@ function spawnHunterVolley(danger) {
 }
 
 function createBullet(x, y, vx, vy, radius, hue, type = 'orb') {
-  const hitScale = type === 'plane' ? 1.4 : type === 'missile' ? 1.35 : type === 'flower' ? 1.2 : 1;
+  const sizeScale = bulletSizeScale(type);
+  const finalRadius = radius * sizeScale;
+  const hitScale =
+    type === 'plane'
+      ? 1.45
+      : type === 'missile'
+        ? 1.38
+        : type === 'car'
+          ? 1.42
+          : type === 'flower'
+            ? 1.2
+            : 1;
   bullets.push({
     x,
     y,
     vx,
     vy,
-    radius,
-    hitRadius: radius * hitScale,
+    radius: finalRadius,
+    hitRadius: finalRadius * hitScale,
     hue,
     type,
     spin: rand(0, Math.PI * 2),
     age: 0,
-    life: 8
+    life: clamp(6.5 + finalRadius * 0.35, 6.5, 10)
   });
 }
 
@@ -375,6 +393,14 @@ function updateBullets(dt) {
       const wave = Math.sin((b.age + b.spin) * 9) * 12;
       b.x += nx * wave * dt;
       b.y += ny * wave * dt;
+    }
+    if (b.type === 'car') {
+      const speed = Math.hypot(b.vx, b.vy) || 1;
+      const nx = -b.vy / speed;
+      const ny = b.vx / speed;
+      const drift = Math.sin((b.age + b.spin) * 5.5) * 8;
+      b.x += nx * drift * dt;
+      b.y += ny * drift * dt;
     }
 
     if (b.type === 'missile' || elapsed > 45) {
@@ -541,7 +567,7 @@ function drawBulletShape(b) {
     return;
   }
 
-  if (b.type === 'plane' || b.type === 'missile') {
+  if (b.type === 'plane' || b.type === 'missile' || b.type === 'car') {
     const a = Math.atan2(b.vy, b.vx);
     ctx.save();
     ctx.translate(b.x, b.y);
@@ -557,7 +583,7 @@ function drawBulletShape(b) {
       ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
       ctx.fillRect(-b.radius * 1.1, -b.radius * 0.25, b.radius * 1.2, b.radius * 0.5);
-    } else {
+    } else if (b.type === 'missile') {
       ctx.fillStyle = `hsl(${b.hue} 95% 68%)`;
       ctx.beginPath();
       ctx.rect(-b.radius * 1.4, -b.radius * 0.55, b.radius * 2.6, b.radius * 1.1);
@@ -571,6 +597,16 @@ function drawBulletShape(b) {
       ctx.lineTo(-b.radius * 2.2, b.radius * 0.35);
       ctx.lineTo(-b.radius * 2.2, -b.radius * 0.35);
       ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillStyle = `hsl(${b.hue} 85% 62%)`;
+      ctx.fillRect(-b.radius * 1.7, -b.radius * 0.75, b.radius * 3.2, b.radius * 1.5);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillRect(-b.radius * 0.9, -b.radius * 0.45, b.radius * 1.1, b.radius * 0.45);
+      ctx.fillStyle = '#111827';
+      ctx.beginPath();
+      ctx.arc(-b.radius * 0.95, b.radius * 0.86, b.radius * 0.38, 0, Math.PI * 2);
+      ctx.arc(b.radius * 0.95, b.radius * 0.86, b.radius * 0.38, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -717,7 +753,29 @@ function randomBulletKind(danger) {
   if (danger < 5.2) {
     return BULLET_TYPES[Math.floor(rand(0, 3))];
   }
+  if (danger < 9.5) {
+    return BULLET_TYPES[Math.floor(rand(0, 5))];
+  }
   return BULLET_TYPES[Math.floor(rand(0, BULLET_TYPES.length))];
+}
+
+function bulletSizeScale(type) {
+  if (type === 'plane') {
+    return rand(1.0, 1.85);
+  }
+  if (type === 'missile') {
+    return rand(1.0, 1.7);
+  }
+  if (type === 'car') {
+    return rand(1.05, 1.9);
+  }
+  if (type === 'face') {
+    return rand(0.9, 1.45);
+  }
+  if (type === 'flower') {
+    return rand(0.85, 1.35);
+  }
+  return rand(0.8, 1.3);
 }
 
 function applyPreset(key) {
