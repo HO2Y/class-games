@@ -91,8 +91,7 @@ requestAnimationFrame(loop);
 document.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
   const code = event.code;
-
-  if (
+  const movementKey =
     key === 'w' ||
     key === 'a' ||
     key === 's' ||
@@ -102,8 +101,10 @@ document.addEventListener('keydown', (event) => {
     key === 'arrowleft' ||
     key === 'arrowright' ||
     code === 'ShiftLeft' ||
-    code === 'ShiftRight'
-  ) {
+    code === 'ShiftRight';
+
+  if (movementKey) {
+    event.preventDefault();
     keys.add(key);
     keys.add(code);
   }
@@ -119,6 +120,22 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
+  const key = event.key.toLowerCase();
+  const code = event.code;
+  if (
+    key === 'w' ||
+    key === 'a' ||
+    key === 's' ||
+    key === 'd' ||
+    key === 'arrowup' ||
+    key === 'arrowdown' ||
+    key === 'arrowleft' ||
+    key === 'arrowright' ||
+    code === 'ShiftLeft' ||
+    code === 'ShiftRight'
+  ) {
+    event.preventDefault();
+  }
   keys.delete(event.key.toLowerCase());
   keys.delete(event.code);
 });
