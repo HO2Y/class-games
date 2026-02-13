@@ -189,6 +189,67 @@ h1 {
   background: #0b1020;
 }
 
+.forge-game {
+  max-width: 980px;
+}
+
+.forge-layout {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.forge-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.forge-panel h2 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.forge-panel p {
+  margin: 6px 0;
+}
+
+.shop-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sale-history {
+  margin: 0;
+  padding-left: 18px;
+  min-height: 100px;
+}
+
+.sale-history li {
+  margin: 4px 0;
+}
+
+.codex-list li {
+  list-style: none;
+  margin: 6px 0;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.codex-list .codex-unlocked {
+  background: #ecfdf3;
+  border-color: #86efac;
+}
+
+.codex-list .codex-locked {
+  background: #f8fafc;
+  color: #6b7280;
+}
+
 .controls {
   margin-top: 12px;
   display: flex;

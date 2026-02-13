@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>검 강화하기</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1f1f1f" />
+  </head>
+  <body>
+    <main class="container forge-game">
+      <h1>검 강화하기</h1>
+      <section class="hud">
+        <p>골드: <span id="gold">0</span></p>
+        <p>보석: <span id="gems">0</span></p>
+        <p>최고 강화: +<span id="bestLevel">0</span></p>
+        <p>현재 열기: <span id="heat">0</span></p>
+      </section>
+
+      <section class="forge-layout">
+        <section class="forge-panel">
+          <h2>현재 검</h2>
+          <p id="swordName">철 검 +0</p>
+          <p>등급: <span id="swordTier">common</span></p>
+          <p>다음 진화: <span id="nextEvolution">-</span></p>
+          <p>강화 성공: <span id="successChance">0%</span></p>
+          <p>대성공: <span id="greatChance">0%</span></p>
+          <p>파손 위험: <span id="breakChance">0%</span></p>
+          <p id="forgeStatus">강화를 눌러 시작하세요.</p>
+          <section class="controls">
+            <button id="enhanceBtn" type="button">강화</button>
+            <button id="sellBtn" type="button">판매</button>
+            <button id="autoBtn" type="button">자동 강화 OFF</button>
+          </section>
+        </section>
+
+        <section class="forge-panel">
+          <h2>능력치 상점</h2>
+          <p>숙련: <span id="statMastery">0</span></p>
+          <p>행운: <span id="statLuck">0</span></p>
+          <p>안정: <span id="statSafety">0</span></p>
+          <p>거래: <span id="statTrader">0</span></p>
+          <p>집중: <span id="statFocus">0</span></p>
+          <section class="controls shop-grid">
+            <button data-up="mastery" type="button">숙련 업</button>
+            <button data-up="luck" type="button">행운 업</button>
+            <button data-up="safety" type="button">안정 업</button>
+            <button data-up="trader" type="button">거래 업</button>
+            <button data-up="focus" type="button">집중 업</button>
+          </section>
+        </section>
+
+        <section class="forge-panel">
+          <h2>코스튬 상자</h2>
+          <p>일반 상자(골드 220): 코스튬 + 중복 보상</p>
+          <p>고급 상자(보석 8): 희귀 이상 확률 증가</p>
+          <p id="crateStatus">미개봉</p>
+          <section class="controls">
+            <button id="openBasicCrateBtn" type="button">일반 상자 열기</button>
+            <button id="openPremiumCrateBtn" type="button">고급 상자 열기</button>
+          </section>
+          <label for="cosmeticSelect">코스튬 장착</label>
+          <select id="cosmeticSelect"></select>
+        </section>
+      </section>
+
+      <section class="forge-layout">
+        <section class="forge-panel">
+          <h2>검 도감</h2>
+          <p id="codexSummary">0 / 0 해금</p>
+          <ul id="codexList" class="sale-history codex-list"></ul>
+        </section>
+        <section class="forge-panel">
+          <h2>미션</h2>
+          <p id="missionText">강화 10회</p>
+          <p id="missionProgress">0 / 10</p>
+          <button id="claimMissionBtn" type="button">미션 보상 받기</button>
+        </section>
+        <section class="forge-panel">
+          <h2>최근 판매</h2>
+          <ul id="saleHistory" class="sale-history"></ul>
+        </section>
+      </section>
+
+      <section class="controls">
+        <a href="./index.html">로비로 이동</a>
+        <a href="./snake.html">Snake로 이동</a>
+        <a href="./pong.html">Pong으로 이동</a>
+        <a href="./bullet.html">탄환 피하기로 이동</a>
+      </section>
+
+      <p class="help">강화 확률은 레벨이 오를수록 낮아집니다. 상점 능력치로 확률/위험/판매가를 조절하세요.</p>
+      <p class="help">코스튬 상자는 확률형이며 중복은 보상으로 전환됩니다. 낮은 확률로 고급 코스튬이 나옵니다.</p>
+    </main>
+
+    <script type="module" src="./src/forge-game.js"></script>
+    <script type="module" src="./src/pwa.js"></script>
+  </body>
+</html>
