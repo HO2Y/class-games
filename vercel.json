@@ -1,5 +1,4 @@
 {
-  "cleanUrls": false,
   "headers": [
     {
       "source": "/sw.js",
@@ -11,17 +10,10 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/",
+      "destination": "/index.html"
     }
   ]
 }
