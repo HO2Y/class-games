@@ -69,6 +69,9 @@ let screenShake = 0;
 let flashAlpha = 0;
 let presetKey = 'easy';
 let bestTime = getHighScore(SCORE_KEYS.bullet, 0);
+let gimmick = null;
+let gimmickCooldown = rand(10, 16);
+let rainAccumulator = 0;
 
 renderFrame(0);
 requestAnimationFrame(loop);
@@ -134,6 +137,7 @@ function loop(now) {
   if (status === 'running') {
     elapsed += dt;
     handleStageTransition();
+    updateGimmick(dt);
     updatePlayer(dt);
     spawnBullets(dt);
     updateBullets(dt);
@@ -171,6 +175,9 @@ function resetGame() {
   stage = 0;
   screenShake = 0;
   flashAlpha = 0;
+  gimmick = null;
+  gimmickCooldown = rand(10, 16);
+  rainAccumulator = 0;
   status = 'running';
   statusEl.textContent = 'Running';
   pauseBtn.textContent = 'Pause';
@@ -200,8 +207,10 @@ function updatePlayer(dt) {
 function spawnBullets(dt) {
   const danger = dangerLevel();
   const spawnScale = DIFFICULTY_PRESETS[presetKey].spawnMultiplier;
+  const gimmickSpawnBoost =
+    gimmick?.type === 'storm' ? 1.28 : gimmick?.type === 'rain' ? 1.16 : 1;
   const spawnsPerSecond = clamp(
-    (1.2 * danger + 0.28 * Math.pow(danger, 1.45)) * spawnScale,
+    (1.2 * danger + 0.28 * Math.pow(danger, 1.45)) * spawnScale * gimmickSpawnBoost,
     1.2,
     48
   );
@@ -352,6 +361,9 @@ function createBullet(x, y, vx, vy, radius, hue, type = 'orb') {
   const giantScale = giantScaleFor(dangerLevel(), type);
   const finalRadius = radius * sizeScale * giantScale;
   const isGiant = giantScale > 1.9;
+  const shiftedHue = normalizeHue(hue + rand(-80, 80) + stage * 18);
+  const sat = rand(72, 100);
+  const light = rand(56, 78);
   const hitScale =
     type === 'plane'
       ? 1.45
@@ -371,7 +383,9 @@ function createBullet(x, y, vx, vy, radius, hue, type = 'orb') {
     vy,
     radius: finalRadius,
     hitRadius: finalRadius * hitScale,
-    hue,
+    hue: shiftedHue,
+    sat,
+    light,
     type,
     isGiant,
     spin: rand(0, Math.PI * 2),
@@ -381,10 +395,12 @@ function createBullet(x, y, vx, vy, radius, hue, type = 'orb') {
 }
 
 function updateBullets(dt) {
+  const speedFactor = gimmick?.type === 'slowfield' ? 0.72 : 1;
+
   for (const b of bullets) {
     b.age += dt;
-    b.x += b.vx * dt;
-    b.y += b.vy * dt;
+    b.x += b.vx * dt * speedFactor;
+    b.y += b.vy * dt * speedFactor;
 
     if (elapsed > 25) {
       b.vx += Math.sin(b.age * 4 + b.hue * 0.05) * 8 * dt;
@@ -490,6 +506,7 @@ function renderFrame() {
   ctx.translate(ox, oy);
 
   drawBackgroundForStage(danger, stage);
+  drawGimmickOverlay();
   drawBullets();
   drawShockwaves();
   drawParticles();
@@ -509,14 +526,16 @@ function renderFrame() {
   dangerLevelEl.textContent = String(Math.floor(danger));
   grazeCountEl.textContent = String(grazeCount);
   if (status === 'running') {
-    statusEl.textContent = `Running | ${stageName(stage)} | ${DIFFICULTY_PRESETS[presetKey].label}`;
+    const gimmickLabel = gimmick ? ` | Gimmick: ${gimmickLabelFor(gimmick.type)}` : '';
+    statusEl.textContent = `Running | ${stageName(stage)} | ${DIFFICULTY_PRESETS[presetKey].label}${gimmickLabel}`;
   }
 }
 
 function drawBullets() {
   for (const b of bullets) {
     const trailAlpha = clamp(0.08 + b.age * 0.03, 0.08, 0.24);
-    ctx.strokeStyle = `hsla(${b.hue} 95% 65% / ${trailAlpha})`;
+    const hue = normalizeHue(b.hue + Math.sin(elapsed * 4 + b.spin) * 10);
+    ctx.strokeStyle = `hsla(${hue} ${b.sat}% ${b.light}% / ${trailAlpha})`;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(b.x - b.vx * 0.04, b.y - b.vy * 0.04);
@@ -525,7 +544,7 @@ function drawBullets() {
 
     if (b.isGiant) {
       const ring = 1 + Math.sin(elapsed * 8 + b.spin) * 0.12;
-      ctx.strokeStyle = `hsla(${b.hue} 100% 80% / 0.65)`;
+      ctx.strokeStyle = `hsla(${hue} 100% 80% / 0.65)`;
       ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.radius * 2.1 * ring, 0, Math.PI * 2);
@@ -533,8 +552,8 @@ function drawBullets() {
     }
 
     const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius * 3.6);
-    glow.addColorStop(0, `hsla(${b.hue} 100% 78% / 0.95)`);
-    glow.addColorStop(1, `hsla(${b.hue} 100% 55% / 0)`);
+    glow.addColorStop(0, `hsla(${hue} 100% 80% / 0.95)`);
+    glow.addColorStop(1, `hsla(${hue} 100% 55% / 0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.radius * 3.6, 0, Math.PI * 2);
@@ -545,18 +564,20 @@ function drawBullets() {
 }
 
 function drawBulletShape(b) {
+  const hue = normalizeHue(b.hue + Math.sin(elapsed * 3 + b.spin) * 8);
+
   if (b.type === 'flower') {
     const petals = 6;
     for (let i = 0; i < petals; i += 1) {
       const a = b.spin + b.age * 2 + (Math.PI * 2 * i) / petals;
       const px = b.x + Math.cos(a) * b.radius * 1.8;
       const py = b.y + Math.sin(a) * b.radius * 1.8;
-      ctx.fillStyle = `hsla(${b.hue + 30} 92% 66% / 0.95)`;
+      ctx.fillStyle = `hsla(${hue + 30} 92% 66% / 0.95)`;
       ctx.beginPath();
       ctx.arc(px, py, b.radius * 0.8, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.fillStyle = `hsl(${b.hue - 20} 92% 76%)`;
+    ctx.fillStyle = `hsl(${hue - 20} 92% 76%)`;
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.radius * 0.95, 0, Math.PI * 2);
     ctx.fill();
@@ -628,7 +649,7 @@ function drawBulletShape(b) {
     ctx.translate(b.x, b.y);
     ctx.rotate(a);
     if (b.type === 'plane') {
-      ctx.fillStyle = `hsl(${b.hue} 90% 70%)`;
+      ctx.fillStyle = `hsl(${hue} 90% 70%)`;
       ctx.beginPath();
       ctx.moveTo(b.radius * 1.8, 0);
       ctx.lineTo(-b.radius * 1.2, b.radius * 0.9);
@@ -639,7 +660,7 @@ function drawBulletShape(b) {
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
       ctx.fillRect(-b.radius * 1.1, -b.radius * 0.25, b.radius * 1.2, b.radius * 0.5);
     } else if (b.type === 'missile') {
-      ctx.fillStyle = `hsl(${b.hue} 95% 68%)`;
+      ctx.fillStyle = `hsl(${hue} 95% 68%)`;
       ctx.beginPath();
       ctx.rect(-b.radius * 1.4, -b.radius * 0.55, b.radius * 2.6, b.radius * 1.1);
       ctx.fill();
@@ -654,7 +675,7 @@ function drawBulletShape(b) {
       ctx.closePath();
       ctx.fill();
     } else {
-      ctx.fillStyle = `hsl(${b.hue} 85% 62%)`;
+      ctx.fillStyle = `hsl(${hue} 85% 62%)`;
       ctx.fillRect(-b.radius * 1.7, -b.radius * 0.75, b.radius * 3.2, b.radius * 1.5);
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
       ctx.fillRect(-b.radius * 0.9, -b.radius * 0.45, b.radius * 1.1, b.radius * 0.45);
@@ -668,7 +689,7 @@ function drawBulletShape(b) {
     return;
   }
 
-  ctx.fillStyle = `hsl(${b.hue} 95% 67%)`;
+  ctx.fillStyle = `hsl(${hue} 95% 67%)`;
   ctx.beginPath();
   ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
   ctx.fill();
@@ -738,6 +759,26 @@ function drawStarfield(danger) {
     const alpha = 0.15 + ((i % 9) / 9) * 0.45;
     ctx.fillStyle = `rgba(255,255,255,${alpha * 0.45})`;
     ctx.fillRect(x, y, 1.6, 1.6);
+  }
+}
+
+function drawGimmickOverlay() {
+  if (!gimmick) {
+    return;
+  }
+
+  if (gimmick.type === 'slowfield') {
+    const r = 95 + Math.sin(elapsed * 5) * 8;
+    ctx.strokeStyle = 'rgba(120, 220, 255, 0.45)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  if (gimmick.type === 'storm') {
+    ctx.fillStyle = 'rgba(255, 120, 220, 0.08)';
+    ctx.fillRect(-16, -16, canvas.width + 32, canvas.height + 32);
   }
 }
 
@@ -916,4 +957,69 @@ function handleStageTransition() {
   for (let i = 0; i < 18; i += 1) {
     spawnGrazeParticles(rand(60, canvas.width - 60), rand(60, canvas.height - 60), 120 + stage * 40);
   }
+}
+
+function updateGimmick(dt) {
+  if (gimmick) {
+    gimmick.timeLeft -= dt;
+    if (gimmick.type === 'rain') {
+      rainAccumulator += dt;
+      while (rainAccumulator > 0.085) {
+        rainAccumulator -= 0.085;
+        spawnRainDrop(dangerLevel());
+      }
+    }
+    if (gimmick.timeLeft <= 0) {
+      gimmick = null;
+      rainAccumulator = 0;
+      screenShake = Math.max(screenShake, 0.2);
+      flashAlpha = Math.max(flashAlpha, 0.15);
+    }
+    return;
+  }
+
+  gimmickCooldown -= dt;
+  if (elapsed < 8 || gimmickCooldown > 0) {
+    return;
+  }
+
+  const roll = Math.random();
+  if (roll < 0.34) {
+    gimmick = { type: 'rain', timeLeft: 5.8 };
+  } else if (roll < 0.67) {
+    gimmick = { type: 'slowfield', timeLeft: 5.2 };
+  } else {
+    gimmick = { type: 'storm', timeLeft: 4.6 };
+  }
+  gimmickCooldown = rand(12, 18);
+  screenShake = Math.max(screenShake, 0.35);
+  flashAlpha = Math.max(flashAlpha, 0.22);
+}
+
+function spawnRainDrop(danger) {
+  const x = rand(0, canvas.width);
+  const speed = scaledSpeed(danger, 1.4);
+  createBullet(
+    x,
+    -10,
+    rand(-35, 35),
+    speed,
+    rand(2.5, 5.6),
+    hueForDanger(danger + 1.5),
+    Math.random() < 0.3 ? 'missile' : Math.random() < 0.5 ? 'car' : 'orb'
+  );
+}
+
+function gimmickLabelFor(type) {
+  if (type === 'rain') return 'Meteor Rain';
+  if (type === 'slowfield') return 'Slow Field';
+  return 'Prism Storm';
+}
+
+function normalizeHue(value) {
+  let h = value % 360;
+  if (h < 0) {
+    h += 360;
+  }
+  return h;
 }
