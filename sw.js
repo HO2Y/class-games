@@ -1,4 +1,4 @@
-const CACHE_NAME = 'arcade-trio-v2';
+const CACHE_NAME = 'arcade-trio-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -43,6 +43,20 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Always try network first for HTML/doc requests so deployments appear immediately.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+    );
     return;
   }
 
