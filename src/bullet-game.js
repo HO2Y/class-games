@@ -349,7 +349,9 @@ function spawnHunterVolley(danger) {
 
 function createBullet(x, y, vx, vy, radius, hue, type = 'orb') {
   const sizeScale = bulletSizeScale(type);
-  const finalRadius = radius * sizeScale;
+  const giantScale = giantScaleFor(dangerLevel(), type);
+  const finalRadius = radius * sizeScale * giantScale;
+  const isGiant = giantScale > 1.9;
   const hitScale =
     type === 'plane'
       ? 1.45
@@ -371,6 +373,7 @@ function createBullet(x, y, vx, vy, radius, hue, type = 'orb') {
     hitRadius: finalRadius * hitScale,
     hue,
     type,
+    isGiant,
     spin: rand(0, Math.PI * 2),
     age: 0,
     life: clamp(6.5 + finalRadius * 0.35, 6.5, 10)
@@ -519,6 +522,15 @@ function drawBullets() {
     ctx.moveTo(b.x - b.vx * 0.04, b.y - b.vy * 0.04);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
+
+    if (b.isGiant) {
+      const ring = 1 + Math.sin(elapsed * 8 + b.spin) * 0.12;
+      ctx.strokeStyle = `hsla(${b.hue} 100% 80% / 0.65)`;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.radius * 2.1 * ring, 0, Math.PI * 2);
+      ctx.stroke();
+    }
 
     const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius * 3.6);
     glow.addColorStop(0, `hsla(${b.hue} 100% 78% / 0.95)`);
@@ -822,6 +834,20 @@ function bulletSizeScale(type) {
     return rand(0.85, 1.35);
   }
   return rand(0.8, 1.3);
+}
+
+function giantScaleFor(danger, type) {
+  const typeBonus =
+    type === 'plane' || type === 'missile' || type === 'car'
+      ? 0.02
+      : type === 'kitty'
+        ? 0.018
+        : 0.012;
+  const chance = clamp(0.015 + danger * typeBonus, 0.015, 0.16);
+  if (Math.random() > chance) {
+    return 1;
+  }
+  return rand(2.1, 3.4);
 }
 
 function applyPreset(key) {
