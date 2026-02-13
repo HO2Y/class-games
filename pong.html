@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pong</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1f1f1f" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Pong</h1>
+      <section class="hud">
+        <p>점수: <span id="leftScore">0</span> - <span id="rightScore">0</span></p>
+        <p>최고 합산점수: <span id="bestTotalScore">0</span></p>
+        <p id="status">Running</p>
+      </section>
+
+      <canvas
+        id="pongCanvas"
+        class="pong-canvas"
+        width="480"
+        height="320"
+        aria-label="Pong game board"
+      ></canvas>
+
+      <section class="controls" aria-label="Game controls">
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="restartBtn" type="button">Restart</button>
+        <a href="./index.html">로비로 이동</a>
+        <a href="./snake.html">Snake로 이동</a>
+        <a href="./bullet.html">탄환 피하기로 이동</a>
+      </section>
+
+      <section class="touch-controls" aria-label="Directional controls">
+        <button class="dir" data-side="left" data-dir="up" type="button">L Up</button>
+        <button class="dir" data-side="left" data-dir="down" type="button">L Down</button>
+        <button class="dir" data-side="right" data-dir="up" type="button">R Up</button>
+        <button class="dir" data-side="right" data-dir="down" type="button">R Down</button>
+      </section>
+
+      <p class="help">왼쪽: W/S, 오른쪽: ↑/↓, Space 또는 P: pause/resume, R: restart</p>
+    </main>
+
+    <script type="module" src="./src/pong-game.js"></script>
+      <script type="module" src="./src/pwa.js"></script>
+  </body>
+</html>

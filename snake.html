@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1f1f1f" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Snake</h1>
+      <section class="hud">
+        <p>Score: <span id="score">0</span></p>
+        <p>Best: <span id="bestScore">0</span></p>
+        <p>Level: <span id="level">1</span></p>
+        <p>Combo: <span id="combo">x1</span></p>
+        <p>Map: <span id="mapSize">20 x 20</span></p>
+        <p id="status">Running</p>
+      </section>
+
+      <section class="board-wrap">
+        <section
+          id="board"
+          class="board"
+          aria-label="Snake game board"
+          role="grid"
+        ></section>
+        <section id="fxLayer" class="fx-layer" aria-hidden="true"></section>
+        <section id="failOverlay" class="fail-overlay" aria-live="assertive">
+          <h2>FAIL</h2>
+          <p id="failScore">점수 0</p>
+          <p>R 또는 Restart로 다시 시작</p>
+        </section>
+      </section>
+
+      <section class="controls" aria-label="Game controls">
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="restartBtn" type="button">Restart</button>
+        <a href="./index.html">로비로 이동</a>
+        <a href="./pong.html">Pong으로 이동</a>
+        <a href="./bullet.html">탄환 피하기로 이동</a>
+      </section>
+
+      <section class="touch-controls" aria-label="Directional controls">
+        <button class="dir" data-dir="up" type="button">Up</button>
+        <div>
+          <button class="dir" data-dir="left" type="button">Left</button>
+          <button class="dir" data-dir="down" type="button">Down</button>
+          <button class="dir" data-dir="right" type="button">Right</button>
+        </div>
+      </section>
+
+      <p class="help">Use Arrow keys or WASD. Space: pause/resume. 몸통은 통과되고 장애물만 피하면 됩니다.</p>
+      <p class="help">열매: 빨강(+1), 보라(+3), 주황(급성장), 파랑(슬로우), 청록(장애물 제거)</p>
+      <p class="help">콤보를 이어가면 추가 점수 + FEVER 속도부스트가 발동됩니다.</p>
+    </main>
+
+    <script type="module" src="./src/snake-game.js"></script>
+      <script type="module" src="./src/pwa.js"></script>
+  </body>
+</html>

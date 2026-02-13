@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>게임 로비</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1f1f1f" />
+  </head>
+  <body>
+    <main class="container lobby">
+      <h1>게임 로비</h1>
+      <p class="help">플레이할 게임을 선택하세요.</p>
+
+      <section class="controls" aria-label="Install app">
+        <button id="installAppBtn" type="button" hidden>앱 설치</button>
+      </section>
+
+      <section class="lobby-grid" aria-label="Game list">
+        <a class="lobby-card" href="./snake.html">
+          <strong>Snake</strong>
+          <span>WASD/방향키로 조작하는 클래식 스네이크</span>
+        </a>
+        <a class="lobby-card" href="./pong.html">
+          <strong>Pong</strong>
+          <span>시간이 지날수록 빨라지고 공이 늘어나는 핑퐁</span>
+        </a>
+        <a class="lobby-card" href="./bullet.html">
+          <strong>탄환 피하기</strong>
+          <span>초반은 쉬우나 후반은 사방 탄막이 몰아치는 회피 게임</span>
+        </a>
+      </section>
+    </main>
+    <script type="module" src="./src/pwa.js"></script>
+  </body>
+</html>

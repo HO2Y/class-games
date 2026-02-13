@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>탄환 피하기</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#1f1f1f" />
+  </head>
+  <body>
+    <main class="container bullet-game">
+      <h1>탄환 피하기</h1>
+      <section class="hud">
+        <p>생존 시간: <span id="timeAlive">0.0s</span></p>
+        <p>최고 기록: <span id="bestTimeAlive">0.0s</span></p>
+        <p>난이도: <span id="dangerLevel">1</span></p>
+        <p>근접 회피: <span id="grazeCount">0</span></p>
+        <p id="status">Running</p>
+      </section>
+
+      <section class="bullet-wrap">
+        <canvas
+          id="bulletCanvas"
+          class="bullet-canvas"
+          width="840"
+          height="520"
+          aria-label="탄환 피하기 게임"
+        ></canvas>
+        <section id="bulletFailOverlay" class="fail-overlay" aria-live="assertive">
+          <h2>FAIL</h2>
+          <p id="bulletFailText">생존 0.0s</p>
+          <p>R 또는 Restart로 다시 시작</p>
+        </section>
+      </section>
+
+      <section class="controls" aria-label="Game controls">
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="restartBtn" type="button">Restart</button>
+        <a href="./index.html">로비로 이동</a>
+        <a href="./snake.html">Snake로 이동</a>
+        <a href="./pong.html">Pong으로 이동</a>
+      </section>
+
+      <section class="controls difficulty-preset" aria-label="Difficulty preset">
+        <span>난이도:</span>
+        <button class="difficulty-btn active" data-diff="easy" type="button">Easy</button>
+        <button class="difficulty-btn" data-diff="normal" type="button">Normal</button>
+        <button class="difficulty-btn" data-diff="hard" type="button">Hard</button>
+        <button class="difficulty-btn" data-diff="insane" type="button">이세느</button>
+      </section>
+
+      <p class="help">이동: WASD / 방향키. Shift: 정밀 이동. Space: pause/resume</p>
+      <p class="help">지수 난이도: 초반 완만, 후반 급격한 탄막. 20회 근접 회피 시 쇼크웨이브가 터집니다.</p>
+      <p class="help">맵 테마는 난이도에 따라 Nebula → Crimson Grid → Cyber Storm → Void Collapse로 전환됩니다.</p>
+    </main>
+
+    <script type="module" src="./src/bullet-game.js"></script>
+      <script type="module" src="./src/pwa.js"></script>
+  </body>
+</html>
