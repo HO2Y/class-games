@@ -1,7 +1,6 @@
 export const DIFFICULTY_TICK_INTERVAL = 600;
-export const BALL_ADD_TICK_INTERVAL = 900;
 export const SPEED_INCREASE_PER_LEVEL = 0.18;
-export const MAX_BALLS = 5;
+export const PADDLE_SPEED_INCREASE_PER_LEVEL = 0.08;
 
 export function createInitialState() {
   const width = 480;
@@ -75,13 +74,13 @@ export function step(state) {
   }
 
   const leftY = clamp(
-    state.leftY + state.leftMove * state.paddleSpeed,
+    state.leftY + state.leftMove * paddleSpeedForLevel(state.paddleSpeed, state.speedLevel),
     0,
     state.height - state.paddleHeight
   );
 
   const rightY = clamp(
-    state.rightY + state.rightMove * state.paddleSpeed,
+    state.rightY + state.rightMove * paddleSpeedForLevel(state.paddleSpeed, state.speedLevel),
     0,
     state.height - state.paddleHeight
   );
@@ -117,24 +116,6 @@ export function step(state) {
     rightScore += result.rightScoreDelta;
     return result.ball;
   });
-
-  const targetBallCount = Math.min(
-    MAX_BALLS,
-    1 + Math.floor(ticks / BALL_ADD_TICK_INTERVAL)
-  );
-  while (balls.length < targetBallCount) {
-    const direction = balls.length % 2 === 0 ? 1 : -1;
-    balls.push(
-      createSpawnBall({
-        width: state.width,
-        height: state.height,
-        ballSize: state.ballSize,
-        speed: currentSpeed,
-        direction,
-        seed: balls.length
-      })
-    );
-  }
 
   return {
     ...state,
@@ -225,6 +206,10 @@ function stepBall({ ball, index, state, leftY, rightY, speed }) {
 
 function speedForLevel(baseSpeed, level) {
   return baseSpeed * (1 + level * SPEED_INCREASE_PER_LEVEL);
+}
+
+function paddleSpeedForLevel(baseSpeed, level) {
+  return baseSpeed * (1 + level * PADDLE_SPEED_INCREASE_PER_LEVEL);
 }
 
 function createSpawnBall({ width, height, ballSize, speed, direction, seed }) {

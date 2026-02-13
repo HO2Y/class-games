@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  BALL_ADD_TICK_INTERVAL,
   DIFFICULTY_TICK_INTERVAL,
   createInitialState,
   setMove,
@@ -65,13 +64,29 @@ test('difficulty level increases over time and ball speed gets faster', () => {
   assert.equal(Math.abs(state.balls[0].vx) > initialSpeed, true);
 });
 
-test('new balls are added over time', () => {
+test('paddle speed increases over time', () => {
+  let level0 = createInitialState();
+  level0 = { ...level0, leftY: 200, speedLevel: 0, ticks: 0 };
+  level0 = setMove(level0, 'left', 'up');
+  level0 = step(level0);
+  const delta0 = 200 - level0.leftY;
+
+  let level1 = createInitialState();
+  level1 = { ...level1, leftY: 200, speedLevel: 1, ticks: DIFFICULTY_TICK_INTERVAL };
+  level1 = setMove(level1, 'left', 'up');
+  level1 = step(level1);
+  const delta1 = 200 - level1.leftY;
+
+  assert.equal(delta1 > delta0, true);
+});
+
+test('pong always keeps one ball', () => {
   let state = createInitialState();
-  for (let i = 0; i < BALL_ADD_TICK_INTERVAL; i += 1) {
+  for (let i = 0; i < DIFFICULTY_TICK_INTERVAL * 3; i += 1) {
     state = step(state);
   }
 
-  assert.equal(state.balls.length, 2);
+  assert.equal(state.balls.length, 1);
 });
 
 test('pause toggles state and stops movement while paused', () => {
